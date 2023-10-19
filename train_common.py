@@ -38,7 +38,7 @@ class TimeType(Enum):
     DiscreteTimeLoss = auto()
 
 def train(args: argparse.ArgumentParser, bfnType: BFNType, timeType: TimeType):
-    dataset = MoleculeDataset("bfn_exercise.pkl", conditioned=args.conditioned)
+    dataset = MoleculeDataset(args.data_path, conditioned=args.conditioned)
     train_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=args.batch, shuffle=True, num_workers=8)
     
     if bfnType == BFNType.Continuous:
@@ -118,5 +118,6 @@ def setup_train_common_parser(parser: argparse.ArgumentParser) -> argparse.Argum
     parser.add_argument("--K", type=int, default=16)
     parser.add_argument("--max_step", type=int, default=1000)
     parser.add_argument("--conditioned", type=bool, default=False)
+    parser.add_argument("--data_path", type=str, default="subsampled.pkl")
     return parser
 

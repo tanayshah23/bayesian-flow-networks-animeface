@@ -69,9 +69,7 @@ def train(args: argparse.ArgumentParser, bfnType: BFNType, timeType: TimeType):
         losses = []
         for X, y in tqdm(train_loader, desc='Epoch {}'.format(epoch), unit='batch'):
             optimizer.zero_grad()
-            if not args.conditioned:
-                y = None
-            else:
+            if args.conditioned:
                 y = y.to(device)
             if timeType == TimeType.ContinuousTimeLoss:
                 loss = bfn.process_infinity(X.to(device), y)

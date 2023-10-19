@@ -1,27 +1,13 @@
-from datasets import Dataset, load_dataset
 import torch
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-from torchinfo import summary
-import math
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ExponentialLR
 from tqdm.auto import tqdm
 import torch_ema
 import argparse
 
-import matplotlib.pyplot as plt
-
-import os
-
-import torchvision
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 from bfns.bfn_continuous import BFNContinuousData
 from bfns.bfn_discretised import BFNDiscretisedData
 from networks.unet import UNet
-from utils import default_transform
 import argparse
 from enum import Enum, auto
 from torch.utils.tensorboard import SummaryWriter
@@ -105,7 +91,6 @@ def setup_train_common_parser(parser: argparse.ArgumentParser) -> argparse.Argum
     parser.add_argument("--load_model_path", type=str, default=None)
     parser.add_argument("--save_model_path", type=str, default="./models/model.pth")
     parser.add_argument("--save_every_n_epoch", type=int, default=10)
-    parser.add_argument("--data_path", type=str, default="./animeface")
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--sigma", type=float, default=0.001)

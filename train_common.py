@@ -24,7 +24,7 @@ class TimeType(Enum):
     DiscreteTimeLoss = auto()
 
 def train(args: argparse.ArgumentParser, bfnType: BFNType, timeType: TimeType):
-    dataset = MoleculeDataset(args.data_path, conditioned=args.conditioned)
+    dataset = MoleculeDataset(args.data_path)
     train_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=args.batch, shuffle=True, num_workers=8)
     
     if bfnType == BFNType.Continuous:

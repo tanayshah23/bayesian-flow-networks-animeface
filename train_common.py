@@ -57,6 +57,8 @@ def train(args: argparse.ArgumentParser, bfnType: BFNType, timeType: TimeType):
             optimizer.zero_grad()
             if args.conditioned:
                 y = y.to(device)
+            else:
+                y = None
             if timeType == TimeType.ContinuousTimeLoss:
                 loss = bfn.process_infinity(X.to(device), y)
             elif timeType == TimeType.DiscreteTimeLoss:

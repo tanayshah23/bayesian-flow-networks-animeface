@@ -71,7 +71,7 @@ def common_generate(args: argparse.ArgumentParser, bfnType: BFNType, timeType: T
     unet.eval()
     
     if bfnType == BFNType.Continuous:
-        bfn = BFNContinuousData(unet, in_channels=3, sigma=args.sigma).to(device)
+        bfn = BFNContinuousData(unet, in_channels=1, sigma=args.sigma).to(device)
     elif bfnType == BFNType.Discretized:
         bfn = BFNDiscretisedData(unet, K=args.K, in_channels=3, sigma=args.sigma).to(device)
     else:

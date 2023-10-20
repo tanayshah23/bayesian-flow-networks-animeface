@@ -1,30 +1,17 @@
-from datasets import Dataset, load_dataset
 import torch
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-from torchinfo import summary
-import math
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ExponentialLR
 from tqdm.auto import tqdm
 import torch_ema
 import argparse
 
-import matplotlib.pyplot as plt
-
-import os
-
-import torchvision
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 from bfns.bfn_continuous import BFNContinuousData
 from bfns.bfn_discretised import BFNDiscretisedData
 from networks.unet import UNet
-from utils import default_transform
 import argparse
 from enum import Enum, auto
 from torch.utils.tensorboard import SummaryWriter
+from data.molecule_dataset import MoleculeDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -37,12 +24,11 @@ class TimeType(Enum):
     DiscreteTimeLoss = auto()
 
 def train(args: argparse.ArgumentParser, bfnType: BFNType, timeType: TimeType):
-    transform = default_transform(args.height, args.width)
-    dataset = datasets.ImageFolder(root=args.data_path, transform=transform)
+    dataset = MoleculeDataset(args.data_path)
     train_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=args.batch, shuffle=True, num_workers=8)
     
     if bfnType == BFNType.Continuous:
-        unet = UNet(3, 3).to(device)
+        unet = UNet(1, 1).to(device)
     elif bfnType == BFNType.Discretized:
         unet = UNet(3, 6).to(device)
     else:
@@ -67,10 +53,14 @@ def train(args: argparse.ArgumentParser, bfnType: BFNType, timeType: TimeType):
     num = 1
     for epoch in tqdm(range(1, args.epoch+1), desc='Training', unit='epoch'):
         losses = []
-        for X, _ in tqdm(train_loader, desc='Epoch {}'.format(epoch), unit='batch'):
+        for X, y in tqdm(train_loader, desc='Epoch {}'.format(epoch), unit='batch'):
             optimizer.zero_grad()
+            if args.conditioned:
+                y = y.to(device)
+            else:
+                y = None
             if timeType == TimeType.ContinuousTimeLoss:
-                loss = bfn.process_infinity(X.to(device))
+                loss = bfn.process_infinity(X.to(device), y)
             elif timeType == TimeType.DiscreteTimeLoss:
                 loss = bfn.process_discrete(X.to(device), max_step=args.max_step)
             else:
@@ -103,7 +93,6 @@ def setup_train_common_parser(parser: argparse.ArgumentParser) -> argparse.Argum
     parser.add_argument("--load_model_path", type=str, default=None)
     parser.add_argument("--save_model_path", type=str, default="./models/model.pth")
     parser.add_argument("--save_every_n_epoch", type=int, default=10)
-    parser.add_argument("--data_path", type=str, default="./animeface")
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--sigma", type=float, default=0.001)
@@ -113,5 +102,7 @@ def setup_train_common_parser(parser: argparse.ArgumentParser) -> argparse.Argum
     # Discrete Time Loss Option
     parser.add_argument("--K", type=int, default=16)
     parser.add_argument("--max_step", type=int, default=1000)
+    parser.add_argument("--conditioned", type=bool, default=False)
+    parser.add_argument("--data_path", type=str, default="subsampled.pkl")
     return parser
 
